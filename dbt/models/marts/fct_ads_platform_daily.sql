@@ -1,5 +1,6 @@
 -- GRAIN: date x surface x position x platform. Serving-side drill-down (billing has no platform).
 {% set keys = ['event_date', 'surface', 'slot_position', 'platform'] %}
+{% set qkeys = [] %}{% for c in keys %}{% do qkeys.append('imp.' ~ c) %}{% endfor %}
 with imp as (
     select event_date, surface, slot_position, platform, sum(impressions) as impressions
     from {{ ref('stg_impressions') }} group by 1, 2, 3, 4
@@ -14,7 +15,7 @@ att as (
     from {{ ref('int_attributed_orders') }} group by 1, 2, 3, 4
 )
 select
-    {{ dbt_utils.generate_surrogate_key(keys) }} as platform_daily_key,
+    {{ dbt_utils.generate_surrogate_key(qkeys) }} as platform_daily_key,
     imp.event_date, imp.surface, imp.slot_position, imp.platform,
     imp.impressions,
     coalesce(clk.clicks, 0)            as clicks,

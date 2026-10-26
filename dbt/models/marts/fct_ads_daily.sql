@@ -2,6 +2,7 @@
 -- Money comes from billing (source of truth); impressions/clicks from serving logs;
 -- attributed orders/GMV from the last-click rule (booked on click date).
 {% set keys = ['event_date', 'zone_id', 'surface', 'slot_position', 'advertiser_id'] %}
+{% set qkeys = [] %}{% for c in keys %}{% do qkeys.append('k.' ~ c) %}{% endfor %}
 with imp as (
     select i.event_date, i.zone_id, i.surface, i.slot_position, c.advertiser_id, sum(i.impressions) as impressions
     from {{ ref('stg_impressions') }} i join {{ ref('stg_campaigns') }} c using (campaign_id)
@@ -37,7 +38,7 @@ keys as (
     union distinct select {{ keys | join(', ') }} from att
 )
 select
-    {{ dbt_utils.generate_surrogate_key(keys) }} as ads_daily_key,
+    {{ dbt_utils.generate_surrogate_key(qkeys) }} as ads_daily_key,
     k.event_date, k.zone_id, k.surface, k.slot_position, k.advertiser_id,
     coalesce(imp.impressions, 0)        as impressions,
     coalesce(clk.clicks, 0)             as clicks,
