@@ -1,0 +1,13 @@
+numpy==2.5.3
+pandas==3.0.5
+pyyaml>=6.0
+matplotlib>=3.8
+duckdb>=1.1
+dbt-core>=1.9,<2.0
+dbt-duckdb>=1.9
+pytest>=8.0
+# for BigQuery hosting (optional): dbt-bigquery>=1.8
+# analysis notebooks (executed in CI, published as HTML)
+seaborn>=0.13
+nbconvert>=7.0
+ipykernel>=6.0

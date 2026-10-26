@@ -1,0 +1,110 @@
+# Simulation config for the Swiggy-style ads marketplace (ALL DATA IS SIMULATED).
+# One global seed: regenerating with the same config produces identical numbers.
+
+seed: 20260427
+
+calendar:
+  start_date: "2026-04-27"   # Monday of week 1 (weeks run Monday-Sunday, IST)
+  weeks: 26                  # -> ends Sunday 2026-10-25
+  timezone: "Asia/Kolkata"
+
+# ~15 Bengaluru delivery zones. weight = share of sessions; density = restaurant density index.
+zones:
+  - {zone_id: Z01, name: Koramangala,      lat: 12.9352, lon: 77.6245, weight: 1.30, density: 1.40}
+  - {zone_id: Z02, name: Indiranagar,      lat: 12.9784, lon: 77.6408, weight: 1.15, density: 1.30}
+  - {zone_id: Z03, name: HSR Layout,       lat: 12.9116, lon: 77.6474, weight: 1.10, density: 1.15}
+  - {zone_id: Z04, name: Whitefield,       lat: 12.9698, lon: 77.7500, weight: 1.20, density: 1.00}
+  - {zone_id: Z05, name: Jayanagar,        lat: 12.9250, lon: 77.5938, weight: 0.95, density: 1.05}
+  - {zone_id: Z06, name: BTM Layout,       lat: 12.9166, lon: 77.6101, weight: 1.05, density: 1.20}
+  - {zone_id: Z07, name: Marathahalli,     lat: 12.9591, lon: 77.6974, weight: 1.00, density: 0.90}
+  - {zone_id: Z08, name: Electronic City,  lat: 12.8452, lon: 77.6602, weight: 0.85, density: 0.70}
+  - {zone_id: Z09, name: JP Nagar,         lat: 12.9063, lon: 77.5857, weight: 0.90, density: 0.95}
+  - {zone_id: Z10, name: Bellandur,        lat: 12.9304, lon: 77.6784, weight: 0.95, density: 0.85}
+  - {zone_id: Z11, name: Malleshwaram,     lat: 13.0031, lon: 77.5643, weight: 0.75, density: 0.90}
+  - {zone_id: Z12, name: Hebbal,           lat: 13.0358, lon: 77.5970, weight: 0.70, density: 0.75}
+  - {zone_id: Z13, name: Yelahanka,        lat: 13.1007, lon: 77.5963, weight: 0.55, density: 0.55}
+  - {zone_id: Z14, name: Banashankari,     lat: 12.9255, lon: 77.5468, weight: 0.70, density: 0.80}
+  - {zone_id: Z15, name: Rajajinagar,      lat: 12.9915, lon: 77.5560, weight: 0.65, density: 0.80}
+
+traffic:
+  # Sessions per day across the city at weekday baseline, by vertical (sample scale, not real volumes)
+  food_sessions_per_day: 210000
+  instamart_sessions_per_day: 85000
+  home_sessions_per_day: 240000     # home-screen opens that request the banner slot
+  growth_per_week: 0.004            # gentle underlying growth
+  weekday_factor: [0.92, 0.90, 0.93, 0.97, 1.10, 1.18, 1.12]   # Mon..Sun
+  friday_night_boost: 1.12          # Fri 20:00-23:59
+  platform_mix: {android: 0.68, ios: 0.32}
+  noise_sd: 0.06                    # lognormal day-zone noise
+  # Hour-of-day curves (shape only; normalised in code)
+  food_hour_curve:      [0.6,0.3,0.15,0.1,0.1,0.2,0.6,1.4,2.2,2.3,1.8,2.6,5.6,6.4,5.0,2.6,2.0,2.4,3.4,5.6,7.6,7.4,5.2,2.4]
+  instamart_hour_curve: [0.8,0.4,0.2,0.1,0.1,0.3,1.4,3.2,4.6,4.8,4.4,4.0,3.6,3.4,3.2,3.2,3.6,4.4,5.2,5.6,5.2,4.2,3.0,1.6]
+  home_hour_curve:      [0.7,0.35,0.2,0.1,0.1,0.25,0.9,2.0,3.0,3.1,2.8,3.2,4.8,5.2,4.4,3.0,2.8,3.2,4.2,5.4,6.2,5.8,4.2,2.0]
+
+# eligibility = probability a live campaign is relevant + deliverable for a given request
+# (delivery radius, query/category match, frequency caps). Keeps bid density realistic.
+surfaces:
+  food_listing:      {positions: 5, billing: CPC, base_ctr: 0.031, pos_decay: [1.0, 0.74, 0.58, 0.47, 0.39], reserve: 6.0, eligibility: 0.045}
+  instamart_search:  {positions: 3, billing: CPC, base_ctr: 0.042, pos_decay: [1.0, 0.69, 0.51],             reserve: 7.0, eligibility: 0.17}
+  home_banner:       {positions: 1, billing: CPM, base_ctr: 0.0065, pos_decay: [1.0],                       reserve: 140.0, eligibility: 0.09}
+
+instamart_categories:
+  - {category: snacks,        weight: 0.20}
+  - {category: beverages,     weight: 0.15}
+  - {category: dairy,         weight: 0.16}
+  - {category: staples,       weight: 0.14}
+  - {category: personal_care, weight: 0.11}
+  - {category: household,     weight: 0.09}
+  - {category: frozen,        weight: 0.08}
+  - {category: baby_care,     weight: 0.07}
+
+advertisers:
+  n_restaurants: 2000
+  chain_share: 0.14
+  n_brands: 300
+  banner_brand_share: 0.22          # brands that also buy home banners
+  initial_active_share: 0.72        # rest join over time
+  budget_scale: 1.00                # global multiplier used for calibration
+  max_campaigns: 3
+
+behaviour:
+  hour_ctr_factor_peak: 1.12        # lunch/dinner CTR lift
+  hour_ctr_factor_late: 0.85        # 00:00-06:00
+  fatigue_strength: 0.10
+  food_cvr_base: 0.125
+  instamart_cvr_base: 0.095
+  banner_cvr_base: 0.060
+  duplicate_click_rate: 0.035       # double taps within 30s (deduped downstream)
+  order_delay_median_min: 22
+  order_delay_late_share: 0.07      # orders arriving >24h after the click (not attributable)
+  incremental_share: 0.62           # share of ad-attributed orders that are truly incremental (answer key only)
+
+lifecycle:
+  roas_churn_threshold: 2.0
+  base_churn_prob: 0.005
+  budget_up_roas: 5.0
+  budget_up_pct: 0.12
+  budget_down_pct: 0.10
+
+# Calendar events that are normal seasonality (visible to analysts, not anomalies)
+seasonality:
+  ipl_match_window: ["2026-04-27", "2026-05-31"]   # evening boost on match nights
+  ipl_evening_boost: 1.10
+  ipl_final: "2026-05-31"
+  ipl_final_boost: 1.35
+  ganesh_chaturthi: "2026-09-14"
+  ganesh_boost: 1.12
+  monsoon_window: ["2026-06-01", "2026-10-15"]
+  random_rain_days: 9
+  rain_session_boost: 1.12
+
+# Planted anomalies (the answer key is written to data/answer_key/anomalies.csv,
+# which no dbt model or dashboard reads). Weeks are 1-indexed from start_date.
+anomalies:
+  - {id: A1, week: 6,  name: android_slot1_below_fold, weeks_active: 2}
+  - {id: A2, week: 9,  name: top_instamart_brand_pause, weeks_active: 2}
+  - {id: A3, week: 12, name: banner_reserve_up_20pct, weeks_active: 15, factor: 1.20}
+  - {id: A4, week: 15, name: heavy_rain_3_days, days: [1, 2, 3], session_boost: 1.38, cvr_boost: 1.10}
+  - {id: A5, week: 21, name: whitefield_click_bot, zone_id: Z04, click_uplift: 0.30}
+  - {id: A6, week: 24, name: click_tracking_bug_one_day, day: 2, drop_share: 0.10}
+  - {id: A7, week: 25, name: navratri_dussehra_festive, weeks_active: 2, session_boost: 1.18, bid_boost: 1.12, new_adv_multiplier: 3.0}
