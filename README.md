@@ -3,7 +3,7 @@
 > **All data in this project is simulated.** It is not Swiggy data. Restaurant and brand names come from
 > public Kaggle datasets (Zomato Bangalore, BigBasket) for realism only; every ad metric attached to them is invented.
 
-**Live dashboard:** https://vivek-122005.github.io/swiggy-ads-pnl/ · **Metric dictionary + lineage:** https://vivek-122005.github.io/swiggy-ads-pnl/docs/ · **WBR memos:** [`reports/`](reports/)
+**Live dashboard:** http://vivekbuilds.me/swiggy-ads-pnl/ · **Metric dictionary + lineage:** http://vivekbuilds.me/swiggy-ads-pnl/docs/ · **WBR memos:** [`reports/`](reports/) · **Variance model (Google Sheets):** see [`sheets/`](sheets/) · **Showcase kit:** [`docs/showcase.md`](docs/showcase.md)
 
 The weekly ads P&L reporting an ads team runs every Monday, built end to end: a seeded marketplace simulator →
 a layered SQL warehouse (dbt on DuckDB, BigQuery-ready) → one tested metric layer → a 5-page dashboard → one-page
