@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: int_attributed_orders
+    description: >
+      Ad-attributed orders. Rule: the same user clicked an ad of the same advertiser within the previous 24 hours;
+      only the last such click gets credit; credit is booked on the click date. ROAS changes a lot with this window.
+    columns:
+      - name: order_id
+        description: One attributed order appears once (no fan-out from multiple clicks).
+        tests: [unique, not_null]
+      - name: click_id
+        tests: [not_null]
+  - name: int_billing_net
+    columns:
+      - name: billing_line_id
+        tests: [unique, not_null]
+  - name: int_advertiser_daily_spend
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [spend_date, advertiser_id]
+  - name: int_auction_outcomes
+    columns:
+      - name: unfilled_requests
+        tests:
+          - dbt_utils.accepted_range: {min_value: 0}
