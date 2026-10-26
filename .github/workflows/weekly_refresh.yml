@@ -1,0 +1,95 @@
+# Weekly refresh: generate data -> build dbt models -> run tests -> export dashboard data -> deploy Pages.
+# This workflow never commits to the repo; it only publishes the built site as a Pages deployment.
+name: weekly-refresh
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "30 22 * * 0"        # Monday 04:00 IST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          dbt deps --project-dir dbt --profiles-dir dbt
+
+      - name: Fetch Kaggle advertiser base (optional)
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        run: |
+          if [ -n "$KAGGLE_USERNAME" ] && [ -n "$KAGGLE_KEY" ]; then
+            bash scripts/fetch_kaggle.sh
+          else
+            echo "No Kaggle secrets: simulator uses its synthetic advertiser base."
+          fi
+
+      - name: Unit tests (simulator)
+        run: python -m pytest -q tests -m "not slow"
+
+      - name: Generate data (seeded)
+        run: make data
+
+      - name: Build warehouse + run all dbt tests
+        run: dbt build --project-dir dbt --profiles-dir dbt --target duckdb
+
+      - name: Data-quality warnings summary
+        if: always()
+        run: python scripts/dbt_results_summary.py dbt/target/run_results.json >> "$GITHUB_STEP_SUMMARY" || true
+
+      - name: Metric dictionary (dbt docs)
+        run: dbt docs generate --project-dir dbt --profiles-dir dbt --static
+
+      - name: Export dashboard data
+        run: python -m dashboard.export --db data/warehouse.duckdb --out dashboard/site/data
+
+      - name: Execute WBR investigation notebooks
+        continue-on-error: true
+        run: |
+          mkdir -p dashboard/site/analysis
+          cd analysis
+          for nb in wbr_week_*.ipynb; do
+            jupyter nbconvert --to html --execute --ExecutePreprocessor.timeout=600 "$nb" --output-dir ../dashboard/site/analysis
+          done
+
+      - name: Assemble site
+        run: |
+          mkdir -p dashboard/site/docs
+          cp dbt/target/static_index.html dashboard/site/docs/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dashboard/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
