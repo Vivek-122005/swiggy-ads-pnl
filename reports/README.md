@@ -12,3 +12,5 @@ investigation notebook is in [`analysis/`](../analysis/). All data is simulated.
 | 12 (13–19 Jul) | [Banner reserve price +20%](wbr_week_12.md) | Pricing / auction health |
 | 21 (14–20 Sep) | [Click bot in Whitefield](wbr_week_21.md) | Invalid traffic |
 | 24 (5–11 Oct) | [One-day CTR dip](wbr_week_24.md) | **Data problem, not a business problem** |
+
+Also: [Category & advertiser insights](category_advertiser_insights.md): where sales should grow or fix.
