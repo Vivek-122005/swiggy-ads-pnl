@@ -1,0 +1,142 @@
+version: 2
+
+# Marts are the ONLY tables the dashboard reads. Each has one row per stated grain, a unique key
+# test on that grain, and range tests on every ratio. Metric definitions: see kpi_weekly and
+# macros/metric_catalogue.sql (one definition per metric).
+
+models:
+  - name: dim_date
+    description: "One calendar for everything: IST dates, weeks run Monday-Sunday, week 1 starts {{ var('start_date') }}."
+    columns:
+      - name: date_day
+        tests: [unique, not_null]
+      - name: week_number
+        tests:
+          - dbt_utils.accepted_range: {min_value: 1, max_value: 26}
+
+  - name: dim_zone
+    description: Bengaluru delivery zones.
+    columns:
+      - name: zone_id
+        tests: [unique, not_null]
+
+  - name: dim_advertiser
+    description: Advertisers (restaurants and brands). Names from public Kaggle data; all ad behaviour is simulated.
+    columns:
+      - name: advertiser_id
+        tests: [unique, not_null]
+      - name: advertiser_type
+        tests:
+          - accepted_values: {values: ['restaurant', 'brand']}
+      - name: first_active_week
+        description: Week number of the advertiser's first-ever spend (null if never spent).
+
+  - name: dim_campaign
+    columns:
+      - name: campaign_id
+        tests: [unique, not_null]
+
+  - name: fct_ads_daily
+    description: >
+      GRAIN: date x zone x surface x position x advertiser. Money from billing (source of truth),
+      impressions/clicks from serving logs, attributed orders from the 24h last-click rule (click date).
+    columns:
+      - name: ads_daily_key
+        tests: [unique, not_null]
+      - name: advertiser_id
+        tests:
+          - not_null
+          - relationships: {to: ref('dim_advertiser'), field: advertiser_id}
+      - name: zone_id
+        tests:
+          - relationships: {to: ref('dim_zone'), field: zone_id}
+      - name: impressions
+        description: Paid ads shown.
+        tests:
+          - dbt_utils.accepted_range: {min_value: 0}
+      - name: clicks
+        description: Valid logged clicks (double taps within 30s removed).
+        tests:
+          - dbt_utils.accepted_range: {min_value: 0}
+      - name: gross_revenue
+        description: "Ad revenue (gross): CPC charges + banner impressions / 1,000 x CPM. Excludes credits."
+        tests:
+          - dbt_utils.accepted_range: {min_value: 0}
+      - name: net_revenue
+        description: Gross revenue less credits (disputes, make-goods, invalid-traffic), restated to the billing date.
+      - name: attributed_orders
+        description: Orders credited to an ad click (24h, same user + advertiser, last click wins).
+      - name: attributed_gmv
+        description: Order value of attributed orders. ROAS numerator.
+
+  - name: fct_ads_platform_daily
+    description: "GRAIN: date x surface x position x platform. Serving-side drill-down; billing has no platform."
+    columns:
+      - name: platform_daily_key
+        tests: [unique, not_null]
+      - name: platform
+        tests:
+          - accepted_values: {values: ['android', 'ios']}
+
+  - name: fct_inventory_hourly
+    description: "GRAIN: date x hour x zone x surface x request category x position. Every ad request is an auction."
+    columns:
+      - name: inventory_hourly_key
+        tests: [unique, not_null]
+      - name: fill_rate
+        description: Filled ad requests / ad requests.
+        tests:
+          - dbt_utils.accepted_range: {min_value: 0, max_value: 1}
+      - name: avg_bidders
+        description: Bid density = sum of eligible bidders / auctions.
+        tests:
+          - dbt_utils.accepted_range: {min_value: 0}
+      - name: reserve_binding_count
+        description: Filled auctions where the reserve set the price.
+      - name: avg_clearing_price
+        description: Average clearing price (CPC in INR; CPM in INR for home banners).
+
+  - name: fct_platform_orders_daily
+    description: "GRAIN: date x zone x vertical. All platform orders and GOV (ads + organic) - the take-rate denominator."
+    columns:
+      - name: platform_orders_key
+        tests: [unique, not_null]
+
+  - name: fct_advertiser_weekly
+    description: "GRAIN: week x advertiser, from the advertiser's first active week."
+    columns:
+      - name: advertiser_week_key
+        tests: [unique, not_null]
+      - name: roas
+        description: Attributed GMV / gross spend.
+        tests:
+          - dbt_utils.accepted_range: {min_value: 0}
+      - name: budget_utilisation
+        description: Gross spend / sum of daily budgets of active campaigns.
+        tests:
+          - dbt_utils.accepted_range: {min_value: 0, max_value: 1.01}
+      - name: is_active
+        description: Gross spend > 0 in the week.
+      - name: is_new
+        description: First-ever spend falls in this week.
+      - name: is_churned
+        description: >
+          Active the previous week and inactive for 4 straight weeks from this week. Null while not yet knowable
+          (fewer than 4 weeks of future data). One definition; never changed silently.
+
+  - name: kpi_weekly
+    description: >
+      THE METRIC LAYER. GRAIN: week x product x metric. Every metric is computed from the single definition in
+      macros/metric_catalogue.sql by summing components first and dividing second. prior_week_value and
+      four_week_avg (a true 4-week ratio of summed components) are the comparison bases shown on every scorecard.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [week_start, product, metric]
+    columns:
+      - name: kpi_key
+        tests: [unique, not_null]
+      - name: product
+        tests:
+          - accepted_values: {values: ['all', 'food_listing', 'instamart_search', 'home_banner']}
+      - name: value
+        tests: [not_null]
