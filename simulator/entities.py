@@ -183,7 +183,8 @@ def _load_kaggle_brands(path: Path, n: int, rng, cat_weights: list[dict]) -> pd.
     g = df.groupby("brand").agg(skus=("cat", "size"), category=("cat", lambda x: x.mode().iloc[0]),
                                 price=("sale_price", "median"),
                                 rating=("rating", "mean") if "rating" in df else ("sale_price", lambda x: np.nan))
-    g = g[g["skus"] >= 3].sort_values("skus", ascending=False)
+    # rank by range size; ties broken by brand name with a stable sort so every platform agrees
+    g = g[g["skus"] >= 3].reset_index().sort_values(["skus", "brand"], ascending=[False, True], kind="mergesort").set_index("brand")
     if len(g) < n:
         print(f"  [entities] {path.name}: only {len(g)} brands, using synthetic")
         return None

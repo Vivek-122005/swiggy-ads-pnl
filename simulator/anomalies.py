@@ -30,10 +30,12 @@ DESCRIPTIONS = {
 def pick_paused_brand(adv: pd.DataFrame, camps: pd.DataFrame) -> str:
     """Choose the largest snacks brand and make sure it is a top-3 Instamart spender by budget."""
     brands = adv[(adv["advertiser_type"] == "brand")]
-    snacks = brands[brands["category"] == "snacks"].sort_values("monthly_budget", ascending=False)
+    # explicit tie-breakers + stable sorts: identical results on every platform / pandas build
+    snacks = brands[brands["category"] == "snacks"].sort_values(["monthly_budget", "advertiser_id"],
+                                                                 ascending=[False, True], kind="mergesort")
     target = snacks.iloc[0]["advertiser_id"]
     im = camps[camps["product"] == "instamart_search"]
-    by_adv = im.groupby("advertiser_id")["daily_budget"].sum().sort_values(ascending=False)
+    by_adv = im.groupby("advertiser_id")["daily_budget"].sum().sort_values(ascending=False, kind="mergesort")
     third = by_adv.iloc[2] if len(by_adv) >= 3 else by_adv.max()
     cur = by_adv.get(target, 0.0)
     m = (camps["advertiser_id"] == target) & (camps["product"] == "instamart_search")

@@ -26,7 +26,7 @@ def report(raw: Path, charts: Path | None = None) -> dict:
     cp = load(raw, "raw_campaigns")
 
     # dedupe double taps: same user + campaign within 30s
-    ck = ck.sort_values(["user_id", "campaign_id", "click_ts"])
+    ck = ck.sort_values(["user_id", "campaign_id", "click_ts", "click_id"], kind="mergesort")
     gap = ck.groupby(["user_id", "campaign_id"])["click_ts"].diff().dt.total_seconds()
     ck = ck[~(gap <= 30)]
 
@@ -48,7 +48,7 @@ def report(raw: Path, charts: Path | None = None) -> dict:
     ck2 = ck.merge(cp[["campaign_id", "advertiser_id"]], on="campaign_id")
     m = od.merge(ck2[["user_id", "advertiser_id", "click_ts", "click_id"]], on=["user_id", "advertiser_id"])
     m = m[(m.click_ts <= m.order_ts) & (m.order_ts - m.click_ts <= pd.Timedelta(hours=24))]
-    m = m.sort_values("click_ts").groupby("order_id").tail(1)
+    m = m.sort_values(["click_ts", "click_id"], kind="mergesort").groupby("order_id").tail(1)
     out["attributed_orders"] = len(m)
     out["attributed_gmv"] = m["order_value"].sum()
     out["roas"] = m["order_value"].sum() / bl["gross_amount"].sum()
