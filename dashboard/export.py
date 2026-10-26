@@ -116,6 +116,26 @@ def _clean(v):
     return v
 
 
+# Tables also published as CSV, for Google Sheets (IMPORTDATA) and Data Studio. Same rows as the JSON.
+CSV_EXPORTS = ["kpi_weekly", "kpi_cube", "revenue_bridge", "movers", "zones", "categories", "cohorts",
+               "inventory_surface", "platform_weekly", "top_advertisers", "advertiser_weekly_summary", "weeks", "metrics"]
+
+# Wide weekly KPI table for BI tools: one row per week x product, four columns per metric
+# (value, prior week, WoW %, 4-week avg). Still read straight from kpi_weekly - nothing recomputed.
+WIDE_SQL = f"""
+    select k.week_number, cast(k.week_start as varchar) as week_start, k.product, k.metric,
+           k.value, k.prior_week_value, k.wow_pct, k.four_week_avg
+    from {MARTS}.kpi_weekly k order by 1, 3"""
+
+
+def _write_csv(path: Path, cols: list[str], rows: list[list]) -> None:
+    import csv
+    with open(path, "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(cols)
+        w.writerows(rows)
+
+
 def export(db: str, out: Path) -> None:
     import duckdb
     out.mkdir(parents=True, exist_ok=True)
@@ -125,7 +145,19 @@ def export(db: str, out: Path) -> None:
         cols = [c[0] for c in cur.description]
         rows = [[_clean(v) for v in r] for r in cur.fetchall()]
         (out / f"{name}.json").write_text(json.dumps({"columns": cols, "rows": rows}, separators=(",", ":")))
+        if name in CSV_EXPORTS:
+            _write_csv(out / f"{name}.csv", cols, rows)
         print(f"  {name:<28} {len(rows):>8,} rows")
+    # wide KPI table (CSV only)
+    long = con.execute(WIDE_SQL).fetchall()
+    metrics = [r[0] for r in con.execute(f"select distinct metric, metric_order from {MARTS}.kpi_weekly order by 2").fetchall()]
+    wide: dict = {}
+    for wk, ws, prod, m, v, pv, wow, a4 in long:
+        row = wide.setdefault((wk, prod), {"week_number": wk, "week_start": ws, "product": prod})
+        row[m], row[f"{m}_prior"], row[f"{m}_wow"], row[f"{m}_4wk"] = (_clean(v), _clean(pv), _clean(wow), _clean(a4))
+    cols = ["week_number", "week_start", "product"] + [c for m in metrics for c in (m, f"{m}_prior", f"{m}_wow", f"{m}_4wk")]
+    _write_csv(out / "kpi_weekly_wide.csv", cols, [[r.get(c) for c in cols] for r in wide.values()])
+    print(f"  {'kpi_weekly_wide (csv)':<28} {len(wide):>8,} rows")
     meta = {
         "refreshed_at": dt.datetime.now(dt.timezone(dt.timedelta(hours=5, minutes=30))).strftime("%Y-%m-%d %H:%M IST"),
         "data_note": "ALL DATA IS SIMULATED. Restaurant and brand names come from public Kaggle datasets "
