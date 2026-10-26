@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ads P&amp;L Weekly Review</title>
+<meta name="description" content="Weekly ads P&L dashboard for a simulated Bengaluru food and quick-commerce ads marketplace. All data is simulated.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f6e74'/%3E%3Cpath d='M8 22V14M14 22V9M20 22v-6M26 22V12' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" defer></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+<div class="shell">
+  <aside class="rail" aria-label="Pages">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7"/><path d="M8 22V14M14 22V9M20 22v-6M26 22V12"/></svg>
+      <div>
+        <div class="brand-title">Ads P&amp;L weekly review</div>
+        <div class="brand-sub">Simulated Bengaluru ads marketplace</div>
+      </div>
+    </div>
+    <nav class="nav" id="nav">
+      <a href="#/summary" data-page="summary"><span class="nav-name">Summary</span><span class="nav-q">How did ads do last week?</span></a>
+      <a href="#/drivers" data-page="drivers"><span class="nav-name">Revenue drivers</span><span class="nav-q">Why did revenue change?</span></a>
+      <a href="#/inventory" data-page="inventory"><span class="nav-name">Inventory &amp; auction</span><span class="nav-q">Are we selling our slots well?</span></a>
+      <a href="#/advertisers" data-page="advertisers"><span class="nav-name">Advertisers</span><span class="nav-q">Who is growing, who is leaving?</span></a>
+      <a href="#/zones" data-page="zones"><span class="nav-name">Zones &amp; categories</span><span class="nav-q">Where should sales focus?</span></a>
+    </nav>
+    <p class="rail-note">Every number here comes from one dbt mart and one written definition. Nothing is recalculated in the browser except ratios of pre-summed parts for filtered slices.</p>
+  </aside>
+
+  <main class="main">
+    <form class="filters" id="filters" aria-label="Filters">
+      <label class="f"><span>Week</span><select id="f-week"></select></label>
+      <label class="f"><span>Product</span>
+        <select id="f-product">
+          <option value="all">All products</option>
+          <option value="food_listing">Food sponsored listings</option>
+          <option value="instamart_search">Instamart sponsored products</option>
+          <option value="home_banner">Home banners</option>
+        </select></label>
+      <label class="f"><span>Zone</span><select id="f-zone"><option value="all">All zones</option></select></label>
+      <label class="f"><span>Advertiser type</span>
+        <select id="f-segment">
+          <option value="all">All advertisers</option>
+          <option value="chain">Restaurant chains</option>
+          <option value="independent">Independent restaurants</option>
+          <option value="brand">Brands</option>
+        </select></label>
+      <button type="button" class="reset" id="f-reset">Reset</button>
+    </form>
+
+    <div id="page" class="page" aria-live="polite">
+      <div class="loading">Loading the latest week…</div>
+    </div>
+
+    <footer class="footer" id="footer">
+      <strong>Simulated data. Not Swiggy data.</strong>
+      <span id="foot-note"></span>
+      <span>Last refresh: <span id="foot-refresh">–</span></span>
+      <span><a id="foot-dict" href="#">Metric dictionary</a> · <a id="foot-repo" href="#">Source on GitHub</a></span>
+    </footer>
+  </main>
+</div>
+<div class="tip" id="tip" role="tooltip" hidden></div>
+</body>
+</html>
