@@ -1,0 +1,39 @@
+name: ads_pnl
+version: "1.0.0"
+config-version: 2
+profile: ads_pnl
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # One calendar for everything: IST, weeks run Monday-Sunday (keep in sync with config/sim_config.yaml)
+  start_date: "2026-04-27"
+  end_date: "2026-10-25"
+  attribution_window_hours: 24      # last-click, same user + same advertiser
+  duplicate_click_seconds: 30       # repeat clicks inside this window count once
+  churn_inactive_weeks: 4           # active last week, then inactive for 4 straight weeks
+  wow_warn_threshold: 0.25          # WoW moves above this raise a warning, not a failure
+  click_log_gap_warn: 0.03          # billed vs logged clicks gap that flags a tracking issue
+
+models:
+  ads_pnl:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: table
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts
+    reporting:
+      +materialized: table
+      +schema: marts
+
+tests:
+  ads_pnl:
+    +severity: error

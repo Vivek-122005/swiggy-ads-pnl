@@ -1,0 +1,34 @@
+version: 2
+
+sources:
+  - name: raw
+    description: >
+      Generator output exactly as written by `simulator/run.py` (ALL DATA SIMULATED). Never edited by hand;
+      every fix happens in a dbt model. On DuckDB the tables are read straight from data/raw/*.csv.gz;
+      on BigQuery they are loaded into the raw dataset by scripts/load_bigquery.py.
+    schema: "{{ env_var('BQ_RAW_DATASET', 'raw') }}"
+    meta:
+      external_location: "read_csv('data/raw/{name}.csv.gz', header = true, auto_detect = true, sample_size = -1)"
+    tables:
+      - name: raw_zones
+        description: 15 Bengaluru delivery zones.
+      - name: raw_advertisers
+        description: Restaurants (Zomato Bangalore names when available) and brands (BigBasket names). Ad behaviour is simulated.
+      - name: raw_campaigns
+        description: One row per campaign with its initial budget and bid.
+      - name: raw_campaign_budget_daily
+        description: Daily snapshot of each live campaign's budget, bid and status (active / paused / churned).
+      - name: raw_ad_requests
+        description: Ad-server log, hourly aggregate per zone x surface x position x platform.
+      - name: raw_impressions
+        description: Impressions served, hourly aggregate per slot x campaign.
+      - name: raw_clicks
+        description: Click events as logged by the app (includes double taps; may have logging gaps).
+      - name: raw_orders
+        description: Orders placed by users who clicked an ad (attribution happens in dbt).
+      - name: raw_billing
+        description: Billing system - the source of truth for money. CPC lines bill clicks, CPM lines bill impressions.
+      - name: raw_billing_adjustments
+        description: Credits issued after billing (disputes, make-goods, invalid-traffic credits).
+      - name: raw_platform_daily
+        description: All platform orders and GOV (ad-driven and organic) per day x zone x vertical.

@@ -1,0 +1,53 @@
+version: 2
+
+models:
+  - name: stg_clicks
+    description: Valid clicks. Double taps (same user + campaign within 30s of their previous click) are removed.
+    columns:
+      - name: click_id
+        tests: [unique, not_null]
+      - name: surface
+        tests:
+          - accepted_values: {values: ['food_listing', 'instamart_search', 'home_banner']}
+      - name: platform
+        tests:
+          - accepted_values: {values: ['android', 'ios']}
+  - name: stg_orders
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: order_value
+        tests:
+          - dbt_utils.accepted_range: {min_value: 0, inclusive: false}
+  - name: stg_billing
+    columns:
+      - name: billing_line_id
+        tests: [unique, not_null]
+      - name: billing_type
+        tests:
+          - accepted_values: {values: ['CPC', 'CPM']}
+      - name: gross_amount
+        tests:
+          - dbt_utils.accepted_range: {min_value: 0}
+  - name: stg_campaigns
+    columns:
+      - name: campaign_id
+        tests: [unique, not_null]
+      - name: advertiser_id
+        tests:
+          - relationships: {to: ref('stg_advertisers'), field: advertiser_id}
+  - name: stg_advertisers
+    columns:
+      - name: advertiser_id
+        tests: [unique, not_null]
+      - name: advertiser_segment
+        tests:
+          - accepted_values: {values: ['chain', 'independent', 'brand']}
+  - name: stg_ad_requests
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [event_date, event_hour, zone_id, surface, request_category, slot_position, platform]
+    columns:
+      - name: filled_requests
+        tests:
+          - dbt_utils.expression_is_true: {expression: "<= ad_requests"}
