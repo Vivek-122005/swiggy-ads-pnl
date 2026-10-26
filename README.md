@@ -17,12 +17,14 @@ Seven events were planted in the simulator with a hidden answer key; each WBR fi
 
 | Week | What the data showed | Root cause found | Impact | Memo |
 |---|---|---|---|---|
-| 6 | Revenue −7.9%; CTR −0.08 pp | Half post-IPL traffic (seasonal); half a **rate** drop isolated to **Android slot 1** (2.36% → 1.38%) → app release | −₹1.35 L/week until hotfix | [WBR 6](reports/wbr_week_06.md) |
-| 9 | Instamart revenue −5.3%, top-10 share 16.9% → 14.0% | Largest Instamart brand **paused all campaigns**; thin categories (frozen, baby care) lost 14 pp fill | −₹0.48 L/week; concentration risk | [WBR 9](reports/wbr_week_09.md) |
-| 12 | Banner CPM +10% but banner revenue −17.6% | **Reserve +20%** priced out 9 advertisers; fill 84% → 64%, reserve-binding 35% → 57% | −₹0.43 L/week (~₹6 L over the half) | [WBR 12](reports/wbr_week_12.md) |
-| 21 | CTR up, Whitefield CVR 10.5% → 8.3% | **Click bot**: 40 IDs, 4,463 clicks, 0 orders | ₹0.57 L billed invalid traffic to credit | [WBR 21](reports/wbr_week_21.md) |
-| 24 | CTR 1.36% on one day | **Data, not business**: click log lost 10.1% of events; billing and orders per impression normal | Attribution understated ~8% that day | [WBR 24](reports/wbr_week_24.md) |
-| 15, 25–26 | Requests and orders spike | Heavy rain (CTR flat, ROAS up) and the Navratri–Dussehra festive fortnight (+29% revenue, new advertisers ×3) | Seasonality — no action | [notebooks](analysis/) |
+| 6 | Revenue −7.6%; CTR −0.08 pp | Half post-IPL traffic (seasonal); half a **rate** drop isolated to **Android slot 1** (2.35% → 1.37%) → app release | −₹1.36 L/week until hotfix | [WBR 6](reports/wbr_week_06.md) |
+| 9 | Instamart revenue −6.8%, top-10 share 16.7% → 14.0% | Largest Instamart brand **paused all campaigns**; thin categories (frozen, baby care) lost 15 pp fill | −₹0.50 L/week; concentration risk | [WBR 9](reports/wbr_week_09.md) |
+| 12 | Banner CPM +8% but banner revenue −9.1% | **Reserve +20%** priced out 11 advertisers; fill 91% → 77%, reserve-binding 25% → 52% | −₹0.25 L/week (~₹3.5 L over the half) | [WBR 12](reports/wbr_week_12.md) |
+| 21 | CTR up, Whitefield CVR 11.1% → 8.4% | **Click bot**: 40 IDs, 4,131 clicks, 0 orders | ₹0.54 L billed invalid traffic to credit | [WBR 21](reports/wbr_week_21.md) |
+| 24 | CTR 1.34% on one day | **Data, not business**: click log lost 9.7% of events; billing and orders per impression normal | Attribution understated ~8% that day | [WBR 24](reports/wbr_week_24.md) |
+| 15, 25–26 | Requests and orders spike | Heavy rain (CTR flat, ROAS +11%) and the Navratri–Dussehra festive fortnight (+29% revenue, new advertisers ×3) | Seasonality — no action | [notebooks](analysis/) |
+
+Plus a [category & advertiser insight note](reports/category_advertiser_insights.md): ~₹43 L/week of unspent budget sits with high-ROAS advertisers whose bids lose auctions — the biggest growth lever.
 
 ## What it answers
 
@@ -119,5 +121,5 @@ tests/                     pytest for simulator logic
 
 ## Numbers at a glance (26 weeks, simulated)
 
-~₹6.5 Cr gross ad revenue · ~310 M ad requests · ~290 M impressions · 4.4 M valid clicks · 0.5 M orders ·
+~₹6.6 Cr gross ad revenue · ~313 M ad requests · ~295 M impressions · 4.4 M valid clicks · 0.5 M orders ·
 2,300 advertisers (2,000 restaurants, 300 brands) · 24 metrics · 91 dbt tests (89 pass + 2 intended warnings: the festive revenue jump and the tracking-bug day).
