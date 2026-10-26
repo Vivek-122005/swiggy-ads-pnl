@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: rpt_kpi_cube_weekly
+    description: >
+      GRAIN: week x product x zone x advertiser segment, with 'all' roll-ups for every combination. Additive
+      components plus exact distinct counts per slice, so dashboard filters never re-aggregate.
+    columns:
+      - name: kpi_cube_key
+        tests: [unique, not_null]
+  - name: rpt_revenue_bridge
+    description: Week-over-week revenue bridge from the revenue identity (requests x fill x CTR x CPC; banners use eCPM).
+    columns:
+      - name: bridge_key
+        tests: [unique, not_null]
+  - name: rpt_biggest_movers
+    description: Top 3 metrics by move vs their 4-week baseline, each week (auto-flagged on the executive page).
+    columns:
+      - name: mover_key
+        tests: [unique, not_null]
+  - name: rpt_zone_weekly
+    columns:
+      - name: zone_week_key
+        tests: [unique, not_null]
+      - name: fill_rate
+        tests:
+          - dbt_utils.accepted_range: {min_value: 0, max_value: 1}
+  - name: rpt_category_weekly
+    columns:
+      - name: category_week_key
+        tests: [unique, not_null]
+  - name: rpt_cohort_retention
+    columns:
+      - name: cohort_key
+        tests: [unique, not_null]
+      - name: retention
+        tests:
+          - dbt_utils.accepted_range: {min_value: 0, max_value: 1}
+  - name: rpt_inventory_weekly
+    columns:
+      - name: inventory_week_key
+        tests: [unique, not_null]
+  - name: rpt_top_advertisers_weekly
+    columns:
+      - name: top_adv_key
+        tests: [unique, not_null]
