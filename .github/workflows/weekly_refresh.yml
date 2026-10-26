@@ -74,6 +74,7 @@ jobs:
           for nb in wbr_week_*.ipynb; do
             jupyter nbconvert --to html --execute --ExecutePreprocessor.timeout=600 "$nb" --output-dir ../dashboard/site/analysis
           done
+          cd .. && python scripts/make_analysis_index.py dashboard/site/analysis
 
       - name: Assemble site
         run: |
