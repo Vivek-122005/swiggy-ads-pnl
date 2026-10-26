@@ -16,7 +16,9 @@ JD_METRICS = ["ad_revenue", "ecpm", "ctr", "fill_rate", "active_advertisers", "r
 
 
 def con(db: str | Path = DB):
+    import os
     import duckdb
+    os.chdir(DB.parents[1])   # staging views read data/raw/... relative to the repo root
     return duckdb.connect(str(db), read_only=True)
 
 

@@ -90,11 +90,15 @@ SPECIFIC = {
 }
 
 
+_ids = iter(range(10**6))
+
+
 def cell(kind: str, src: str) -> dict:
     lines = src.splitlines(keepends=True)
+    cid = f"c{next(_ids):04d}"
     if kind == "md":
-        return {"cell_type": "markdown", "metadata": {}, "source": lines}
-    return {"cell_type": "code", "metadata": {}, "execution_count": None, "outputs": [], "source": lines}
+        return {"id": cid, "cell_type": "markdown", "metadata": {}, "source": lines}
+    return {"id": cid, "cell_type": "code", "metadata": {}, "execution_count": None, "outputs": [], "source": lines}
 
 
 def build(week: int, spec: dict) -> dict:
